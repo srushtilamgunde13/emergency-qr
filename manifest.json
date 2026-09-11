@@ -1,0 +1,16 @@
+{
+  "name": "HELP CARD PRO - Emergency QR",
+  "short_name": "HELP CARD",
+  "description": "Offline Emergency QR that saves lives",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#38bdf8",
+  "start_url": "./",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/8901/8901559.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
