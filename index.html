@@ -6,87 +6,140 @@
 <title>HELP ME - Emergency QR</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
-body{font-family:system-ui;background:#0f172a;color:#fff;padding:20px;max-width:500px;margin:auto}
-h1{text-align:center;color:#38bdf8}
-.card{background:#1e293b;padding:20px;border-radius:16px;margin-top:20px}
-input,select,textarea{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none;background:#0f172a;color:white;box-sizing:border-box}
-label{font-size:13px;color:#94a3b8}
-button{width:100%;padding:14px;background:#38bdf8;border:none;border-radius:10px;font-weight:bold;font-size:16px;margin-top:15px;cursor:pointer}
-#qrcode{display:flex;justify-content:center;padding:20px;background:white;border-radius:12px;margin:20px 0}
-.emergency-view{font-size:22px;line-height:1.6}
-.emergency-view h2{color:#f87171;font-size:32px;text-align:center}
-.big{font-size:26px;font-weight:bold;color:#facc15}
-.small{font-size:14px;color:#94a3b8;text-align:center;margin-top:20px}
+:root{--bg:#0f172a;--card:#1e293b;--accent:#38bdf8;--red:#ef4444}
+body{font-family:system-ui;background:var(--bg);color:#fff;padding:16px;max-width:520px;margin:auto}
+h1{text-align:center;margin:10px 0}
+.topbar{display:flex;justify-content:space-between;align-items:center}
+.lang{padding:6px 12px;border-radius:20px;background:var(--card);border:1px solid #334155;color:#fff}
+.card{background:var(--card);padding:18px;border-radius:18px;margin-top:14px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+input,select{width:100%;padding:13px;margin:7px 0 12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:white;box-sizing:border-box;font-size:15px}
+label{font-size:12px;color:#94a3b8;letter-spacing:.5px}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;margin-top:10px}
+.btn-primary{background:var(--accent);color:#000}
+.btn-green{background:#22c55e;color:#000}
+.btn-dark{background:#334155;color:white}
+#qrcode{display:flex;justify-content:center;padding:18px;background:white;border-radius:16px;margin:16px 0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.emergency-view{font-size:20px;line-height:1.7}
+.emergency-view h2{color:var(--red);font-size:34px;text-align:center;animation:blink 1s infinite}
+.big{font-size:26px;font-weight:900}
+.call{font-size:26px;background:#22c55e;color:#000;padding:12px;border-radius:12px;display:block;text-align:center;text-decoration:none;margin:10px 0;font-weight:800}
+@keyframes blink{50%{opacity:.6}}
+.small{font-size:12px;color:#94a3b8;text-align:center}
+.sticker{border:2px dashed #334155;padding:10px;border-radius:12px}
+@media print{body{background:white;color:black}#createView{display:none!important}#printArea{display:block!important}}
 </style>
 </head>
 <body>
 <div id="createView">
-<h1>🚨 Emergency QR Card</h1>
-<p style="text-align:center;color:#94a3b8">Fill once, generate QR, stick on helmet/bag. Works without internet.</p>
-<div class="card">
-<label>Full Name</label><input id="name" placeholder="Srushti Lamgunde">
-<label>Blood Group</label>
-<select id="blood"><option>B+ve</option><option>A+ve</option><option>O+ve</option><option>AB+ve</option><option>B-ve</option><option>A-ve</option><option>O-ve</option><option>AB-ve</option><option>Unknown</option></select>
-<label>Allergies / Medical Issue</label><input id="medical" placeholder="e.g. Penicillin allergy, Asthma">
-<label>Emergency Contact 1 - Name & Number</label><input id="c1" placeholder="Dad - 9876543210">
-<label>Emergency Contact 2 - Name & Number</label><input id="c2" placeholder="Mom - 9876543211">
-<label>Address (optional)</label><input id="addr" placeholder="Calangute, Goa">
-<button onclick="generate()">Generate QR Code</button>
-<div id="qrcode"></div>
-<p id="downloadHint" class="small"></p>
+<div class="topbar">
+<h1 style="font-size:20px">🚨 Emergency QR</h1>
+<select class="lang" id="lang" onchange="changeLang()"><option value="en">English</option><option value="hi">हिन्दी</option><option value="mr">मराठी</option></select>
 </div>
-<p class="small">Privacy: 100% offline. Data is inside QR, not saved anywhere.</p>
+<p class="small" id="tagline">Works without internet. Data stays in QR only.</p>
+<div class="card">
+<label id="l_name">FULL NAME</label><input id="name" placeholder="Srushti Lamgunde">
+<label id="l_blood">BLOOD GROUP</label>
+<select id="blood"><option>B+ve</option><option>A+ve</option><option>O+ve</option><option>AB+ve</option><option>B-ve</option><option>A-ve</option><option>O-ve</option><option>AB-ve</option><option>Unknown</option></select>
+<label id="l_medical">ALLERGY / DISEASE</label><input id="medical" placeholder="Penicillin allergy, Asthma">
+<label id="l_c1">EMERGENCY CONTACT 1</label><input id="c1" placeholder="Dad - 9876543210">
+<label id="l_c2">EMERGENCY CONTACT 2</label><input id="c2" placeholder="Mom - 9876543211">
+<button class="btn btn-primary" onclick="generate()" id="btnGen">Generate QR Code</button>
+<div id="qrcode" style="display:none"></div>
+<div id="postActions" style="display:none">
+<div class="actions">
+<button class="btn btn-green" onclick="downloadQR()" id="btnDown">⬇️ Download QR</button>
+<button class="btn btn-dark" onclick="window.print()" id="btnPrint">🖨️ Print Sticker</button>
+</div>
+<button class="btn btn-dark" onclick="shareLink()" id="btnShare">🔗 Copy Shareable Link</button>
+<p class="small" id="hint"></p>
+</div>
+</div>
+<p class="small">Built in Goa with ❤️ for safety. No login, No tracking.</p>
 </div>
 
 <div id="emergencyView" style="display:none">
 <div class="emergency-view">
-<h2>🚨 EMERGENCY - HELP ME</h2>
-<p><span class="big" id="vName"></span> - Blood: <span class="big" id="vBlood"></span></p>
+<h2>🚨 EMERGENCY</h2>
+<p id="ev1">Name: <span class="big" id="vName"></span></p>
+<p>Blood: <span class="big" style="color:#f87171" id="vBlood"></span></p>
+<hr style="border-color:#334155">
+<p id="ev2">Medical: <b id="vMedical"></b></p>
+<a class="call" id="vC1call" href="#">📞 CALL CONTACT 1</a>
+<p style="text-align:center" id="vC1"></p>
+<a class="call" id="vC2call" href="#" style="background:#38bdf8">📞 CALL CONTACT 2</a>
+<p style="text-align:center" id="vC2"></p>
+<p id="ev3">Address: <span id="vAddr"></span></p>
 <hr>
-<p>⚠️ Medical: <b id="vMedical"></b></p>
-<p>📞 Contact 1: <b id="vC1" style="font-size:28px;color:#4ade80"></b></p>
-<p>📞 Contact 2: <b id="vC2" style="font-size:28px;color:#4ade80"></b></p>
-<p>🏠 Address: <span id="vAddr"></span></p>
-<hr>
-<p class="small">You are seeing this because you scanned Emergency QR. Please call contact & help.</p>
+<p class="small">Please help this person. Call above numbers immediately.</p>
 </div>
+</div>
+
+<div id="printArea" style="display:none">
+<h2 style="color:black;text-align:center">Emergency QR - Print & Stick on Helmet / Bag</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" id="printGrid"></div>
 </div>
 
 <script>
-function generate(){
- const data = {
-  n: document.getElementById('name').value || 'Unknown',
-  b: document.getElementById('blood').value,
-  m: document.getElementById('medical').value || 'None',
-  c1: document.getElementById('c1').value,
-  c2: document.getElementById('c2').value,
-  a: document.getElementById('addr').value
- };
- // Create text for QR that works offline without internet
- const qrText = `EMERGENCY HELP\nName: ${data.n}\nBlood: ${data.b}\nMedical: ${data.m}\nContact1: ${data.c1}\nContact2: ${data.c2}\nAddr: ${data.a}\n\nGenerated by emergency-qr`;
- 
- document.getElementById('qrcode').innerHTML='';
- new QRCode(document.getElementById('qrcode'), {text: qrText, width: 220, height: 220});
- 
- document.getElementById('downloadHint').innerHTML = `✅ QR Generated! Take a screenshot & print it. <br><br>Also shareable link (needs internet): <br><a style="color:#38bdf8;word-break:break-all" href="${location.origin+location.pathname}#${btoa(JSON.stringify(data))}">${location.origin+location.pathname}#DATA</a>`;
- 
- // Also save for preview
- location.hash = btoa(JSON.stringify(data));
+const t={
+ en:{tagline:"Works without internet. Data stays in QR only.",name:"FULL NAME",blood:"BLOOD GROUP",medical:"ALLERGY / DISEASE",c1:"EMERGENCY CONTACT 1",c2:"EMERGENCY CONTACT 2",gen:"Generate QR Code",down:"⬇️ Download QR",print:"🖨️ Print Sticker",share:"🔗 Copy Shareable Link",hint:"Screenshot this QR. Print and stick on helmet. Scanning works even in flight mode!"},
+ hi:{tagline:"बिना इंटरनेट के काम करता है",name:"पूरा नाम",blood:"ब्लड ग्रुप",medical:"एलर्जी / बीमारी",c1:"आपातकालीन संपर्क 1",c2:"आपातकालीन संपर्क 2",gen:"QR बनाएँ",down:"⬇️ QR डाउनलोड",print:"🖨️ प्रिंट करें",share:"🔗 लिंक कॉपी करें",hint:"इस QR का स्क्रीनशॉट लें और हेलमेट पर चिपकाएं।"},
+ mr:{tagline:"इंटरनेटशिवाय काम करते",name:"पूर्ण नाव",blood:"रक्तगट",medical:"अॅलर्जी / आजार",c1:"आपत्कालीन संपर्क 1",c2:"आपत्कालीन संपर्क 2",gen:"QR तयार करा",down:"⬇️ QR डाउनलोड करा",print:"🖨️ प्रिंट करा",share:"🔗 लिंक कॉपी करा",hint:"हा QR हेल्मेटवर लावा।"}
 }
-
-// If someone opens with #data -> show emergency view
-window.onload = ()=>{
- if(location.hash.length > 10){
+function changeLang(){
+ let l=document.getElementById('lang').value;
+ document.getElementById('tagline').innerText=t[l].tagline;
+ document.getElementById('l_name').innerText=t[l].name;
+ document.getElementById('l_blood').innerText=t[l].blood;
+ document.getElementById('l_medical').innerText=t[l].medical;
+ document.getElementById('l_c1').innerText=t[l].c1;
+ document.getElementById('l_c2').innerText=t[l].c2;
+ document.getElementById('btnGen').innerText=t[l].gen;
+ document.getElementById('btnDown').innerText=t[l].down;
+ document.getElementById('btnPrint').innerText=t[l].print;
+ document.getElementById('btnShare').innerText=t[l].share;
+ document.getElementById('hint').innerText=t[l].hint;
+}
+let qrDataGlobal="";
+function generate(){
+ const data={n:document.getElementById('name').value||'Unknown',b:document.getElementById('blood').value,m:document.getElementById('medical').value||'None',c1:document.getElementById('c1').value,c2:document.getElementById('c2').value,a:''};
+ const qrText=`🚨 EMERGENCY\nName:${data.n}\nBlood:${data.b}\nMedical:${data.m}\nC1:${data.c1}\nC2:${data.c2}`;
+ qrDataGlobal=qrText;
+ document.getElementById('qrcode').style.display='flex';
+ document.getElementById('qrcode').innerHTML='';
+ new QRCode(document.getElementById('qrcode'),{text:qrText,width:240,height:240});
+ document.getElementById('postActions').style.display='block';
+ document.getElementById('hint').innerText=t[document.getElementById('lang').value].hint;
+ location.hash=btoa(JSON.stringify(data));
+ document.getElementById('printGrid').innerHTML=`<div class='sticker'><div id='pq1'></div><p style='color:black'>${data.n} | ${data.b}</p></div><div class='sticker'><div id='pq2'></div><p style='color:black'>${data.c1}</p></div>`;
+ setTimeout(()=>{
+  new QRCode(document.getElementById('pq1'),{text:qrText,width:180,height:180});
+  new QRCode(document.getElementById('pq2'),{text:qrText,width:180,height:180});
+ },500);
+}
+function downloadQR(){
+ let img=document.querySelector('#qrcode img')||document.querySelector('#qrcode canvas');
+ if(!img)return;
+ let url=img.src||img.toDataURL();
+ let a=document.createElement('a');a.href=url;a.download='Emergency-QR.png';a.click();
+}
+function shareLink(){
+ navigator.clipboard.writeText(location.href);
+ alert('Link Copied! Share on WhatsApp');
+}
+window.onload=()=>{
+ if(location.hash.length>10){
   try{
-   const data = JSON.parse(atob(location.hash.substring(1)));
+   const d=JSON.parse(atob(location.hash.substring(1)));
    document.getElementById('createView').style.display='none';
    document.getElementById('emergencyView').style.display='block';
-   document.getElementById('vName').innerText = data.n;
-   document.getElementById('vBlood').innerText = data.b;
-   document.getElementById('vMedical').innerText = data.m;
-   document.getElementById('vC1').innerText = data.c1;
-   document.getElementById('vC2').innerText = data.c2;
-   document.getElementById('vAddr').innerText = data.a;
+   document.getElementById('vName').innerText=d.n;
+   document.getElementById('vBlood').innerText=d.b;
+   document.getElementById('vMedical').innerText=d.m;
+   document.getElementById('vC1').innerText=d.c1;
+   document.getElementById('vC2').innerText=d.c2;
+   let num1=(d.c1.match(/\d{10}/)||[])[0]; let num2=(d.c2.match(/\d{10}/)||[])[0];
+   if(num1)document.getElementById('vC1call').href='tel:'+num1; if(num2)document.getElementById('vC2call').href='tel:'+num2;
   }catch(e){}
  }
 }
